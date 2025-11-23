@@ -21,7 +21,7 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
 
 ## 📊 Project Stats
 
-**Milestone Progress:** 4 of 8 milestones complete (50%)
+**Milestone Progress:** 5 of 8 milestones complete (62.5%)
 
 ### Completed Features
 - ✅ **Foundation & Authentication** (Milestone 1)
@@ -49,6 +49,14 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
   - Report saving and management
   - Query history tracking
 
+- ✅ **Saved Reports** (Milestone 5)
+  - Report gallery with grid layout
+  - Dedicated report view page with full-screen layout
+  - Previous/Next navigation through saved reports
+  - Collapsible SQL query display with formatting
+  - Smart caching strategy (cache SQL generation, not results)
+  - Delete reports with confirmation
+
 ### Code Statistics
 - **120+ files** committed
 - **70,000+ lines** of TypeScript/React code
@@ -57,8 +65,9 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
 - **Zero build errors** with comprehensive type safety
 
 ### In Progress
-- 🔄 Saved reports gallery and management (Milestone 5)
-- 🔄 Admin panel - User management, Templates, Examples, Guidelines (Milestone 6)
+- 🔄 Admin panel - User management, Schema, Templates, Examples, Guidelines (Milestone 6)
+- 🔄 Property tests and comprehensive test coverage (Milestone 7)
+- 🔄 Production deployment and CI/CD (Milestone 8)
 
 ## 🏗️ Architecture
 
