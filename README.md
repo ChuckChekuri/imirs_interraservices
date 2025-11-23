@@ -362,7 +362,7 @@ npm run test:aws         # Test AWS connectivity
 
 ## 🤝 Contributing
 
-This is a private project for the Illinois Tollway. For questions or issues, contact sbandi@interraservices.com.
+This is a private project for the Illinois Tollway. For questions or issues, contact sbandi@interraservices.com or chuck@axiomaticinfo.com.
 
 ## 📄 License
 
