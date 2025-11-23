@@ -21,7 +21,7 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
 
 ## 📊 Project Stats
 
-**Milestone Progress:** 3 of 8 milestones complete (37.5%)
+**Milestone Progress:** 4 of 8 milestones complete (50%)
 
 ### Completed Features
 - ✅ **Foundation & Authentication** (Milestone 1)
@@ -42,12 +42,12 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
   - Comprehensive audit logging to CloudWatch
   - User management API endpoints
 
-- ✅ **Admin Dashboard** (Milestone 6 - Partial)
-  - User management interface with real-time statistics
-  - Query count tracking and last login timestamps
-  - Direct DynamoDB access utilities for server-side operations
-  - Cognito integration for user data display
-  - Admin seeding script with UserProfile creation
+- ✅ **Results Display** (Milestone 4)
+  - Interactive data tables with sorting and filtering
+  - Automatic chart generation based on data types
+  - Export to Excel, CSV, and PDF formats
+  - Report saving and management
+  - Query history tracking
 
 ### Code Statistics
 - **120+ files** committed
@@ -56,17 +56,9 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
 - **Property-based testing** with fast-check
 - **Zero build errors** with comprehensive type safety
 
-### Recent Updates (Nov 2024)
-- 🆕 **Admin Dashboard**: User list with query counts and last login tracking
-- 🆕 **DynamoDB Admin Utils**: Server-side utilities bypassing Amplify auth for admin operations
-- 🆕 **Query Tracking**: Automatic query count increment and profile updates
-- 🆕 **Seed Script**: Enhanced admin user seeding with UserProfile creation
-- 🆕 **User Management**: Cognito integration with custom attributes mapping
-
 ### In Progress
-- 🔄 Results display with tables and charts (Milestone 4)
-- 🔄 Saved reports functionality (Milestone 5)
-- 🔄 Admin panel - Templates, Examples, Guidelines management (Milestone 6)
+- 🔄 Saved reports gallery and management (Milestone 5)
+- 🔄 Admin panel - User management, Templates, Examples, Guidelines (Milestone 6)
 
 ## 🏗️ Architecture
 
