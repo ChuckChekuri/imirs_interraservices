@@ -42,17 +42,31 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
   - Comprehensive audit logging to CloudWatch
   - User management API endpoints
 
+- ✅ **Admin Dashboard** (Milestone 6 - Partial)
+  - User management interface with real-time statistics
+  - Query count tracking and last login timestamps
+  - Direct DynamoDB access utilities for server-side operations
+  - Cognito integration for user data display
+  - Admin seeding script with UserProfile creation
+
 ### Code Statistics
-- **113 files** committed
-- **63,859 insertions** in initial commit
+- **120+ files** committed
+- **70,000+ lines** of TypeScript/React code
 - **TypeScript strict mode** enabled
 - **Property-based testing** with fast-check
-- **Zero build errors** after alignment fixes
+- **Zero build errors** with comprehensive type safety
+
+### Recent Updates (Nov 2024)
+- 🆕 **Admin Dashboard**: User list with query counts and last login tracking
+- 🆕 **DynamoDB Admin Utils**: Server-side utilities bypassing Amplify auth for admin operations
+- 🆕 **Query Tracking**: Automatic query count increment and profile updates
+- 🆕 **Seed Script**: Enhanced admin user seeding with UserProfile creation
+- 🆕 **User Management**: Cognito integration with custom attributes mapping
 
 ### In Progress
 - 🔄 Results display with tables and charts (Milestone 4)
 - 🔄 Saved reports functionality (Milestone 5)
-- 🔄 Admin panel for system management (Milestone 6)
+- 🔄 Admin panel - Templates, Examples, Guidelines management (Milestone 6)
 
 ## 🏗️ Architecture
 
@@ -157,10 +171,6 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
    AWS_PROFILE=your-aws-profile
    AWS_REGION=us-east-1
 
-   # Cognito Configuration
-   NEXT_PUBLIC_COGNITO_USER_POOL_ID=your-user-pool-id
-   NEXT_PUBLIC_COGNITO_CLIENT_ID=your-client-id
-
    # AWS Bedrock
    AWS_BEDROCK_REGION=us-east-1
    BEDROCK_MODEL_HAIKU=anthropic.claude-3-haiku-20240307-v1:0
@@ -184,6 +194,8 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
+   **Note:** Cognito configuration is now automatically loaded from `amplify_outputs.json` - no need to manually configure user pool IDs.
+
 4. **Set up AWS Amplify backend**
    ```bash
    npm run amplify:sandbox
@@ -192,10 +204,21 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
    This will:
    - Deploy Cognito User Pool with custom attributes
    - Set up authentication resources
-   - Create AppSync API with DynamoDB tables
-   - Generate `amplify_outputs.json`
+   - Create AppSync API with DynamoDB tables (UserProfile, SavedReport, QueryHistory)
+   - Generate `amplify_outputs.json` with configuration
 
-5. **Upload initial configuration to S3**
+5. **Seed admin user**
+   ```bash
+   npx tsx scripts/seed-admin-user.ts
+   ```
+
+   This creates the initial admin user with:
+   - Full admin and audit permissions
+   - UserProfile in DynamoDB
+   - Cognito user with custom attributes
+   - Default credentials (change after first login)
+
+6. **Upload initial configuration to S3**
    ```bash
    # Upload database schema
    aws s3 cp config-templates/database-schema.json s3://imirs-ai-reporting-config/schema/database-schema.json
@@ -210,12 +233,53 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
    aws s3 cp config-templates/formatting-guidelines.md s3://imirs-ai-reporting-config/guidelines/formatting-guidelines.md
    ```
 
-6. **Run development server**
+7. **Run development server**
    ```bash
    npm run dev
    ```
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## �️I Server-Side Admin Utilities
+
+### DynamoDB Direct Access
+
+For server-side operations (API routes), the application provides direct DynamoDB access utilities that bypass Amplify's authorization layer. This is useful for:
+
+- Admin operations on user profiles
+- Updating query counts and statistics
+- Managing templates, examples, and guidelines
+- Bulk operations and migrations
+
+**Usage Example:**
+```typescript
+import { 
+  updateUserProfile, 
+  incrementUserQueryCount,
+  createQueryHistory 
+} from '@/lib/dynamodb-admin-utils';
+
+// Update user profile
+await updateUserProfile(userId, {
+  queryCount: 10,
+  lastLoginAt: new Date().toISOString(),
+});
+
+// Increment query count
+await incrementUserQueryCount(userId);
+
+// Log query to history
+await createQueryHistory({
+  userId,
+  question: "Show me test results",
+  sql: "SELECT * FROM Tests",
+  executionTime: 234,
+  rowCount: 100,
+  success: true,
+});
+```
+
+**Important:** These utilities bypass authorization checks, so ensure proper authentication is verified before calling them.
 
 ## 🔧 IMIRS Database Connectivity
 
