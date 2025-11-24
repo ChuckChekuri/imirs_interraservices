@@ -64,8 +64,16 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
 - **Property-based testing** with fast-check
 - **Zero build errors** with comprehensive type safety
 
+- ✅ **SQL Template Management** (Milestone 6 - Partial)
+  - DynamoDB storage for SQL templates
+  - Test SQL button with verification status tracking
+  - Create Report button to generate saved reports from templates
+  - Verified/Unverified badges with test metadata
+  - Full CRUD operations with real-time updates
+  - Migration tools from S3 to DynamoDB
+
 ### In Progress
-- 🔄 Admin panel - User management, Schema, Templates, Examples, Guidelines (Milestone 6)
+- 🔄 Admin panel - User management, Schema, Examples, Guidelines (Milestone 6)
 - 🔄 Property tests and comprehensive test coverage (Milestone 7)
 - 🔄 Production deployment and CI/CD (Milestone 8)
 
@@ -281,6 +289,44 @@ await createQueryHistory({
 ```
 
 **Important:** These utilities bypass authorization checks, so ensure proper authentication is verified before calling them.
+
+## 📋 SQL Template Management
+
+### DynamoDB Storage
+
+SQL templates are now stored in DynamoDB for better scalability and real-time updates:
+
+**Features:**
+- ✅ **Test SQL Button** - Execute templates to verify they work correctly
+- ✅ **Verification Status** - Green "Verified" or yellow "Unverified" badges
+- ✅ **Create Report Button** - Generate saved reports from templates
+- ✅ **Real-time Updates** - No cache invalidation issues
+- ✅ **Full CRUD Operations** - Create, read, update, delete templates
+- ✅ **Formatted SQL** - Support for comments and newlines in templates
+
+**Template Structure:**
+```typescript
+{
+  id: string;
+  name: string;
+  description: string;
+  sql: string;
+  category: string;
+  keywords: string[];
+  verified: boolean;
+  lastTestedAt: string;
+  lastTestedBy: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+**Migration from S3:**
+```bash
+# Migrate existing templates from S3 to DynamoDB
+npx tsx scripts/migrate-templates-to-dynamodb.ts
+```
 
 ## 🔧 IMIRS Database Connectivity
 
