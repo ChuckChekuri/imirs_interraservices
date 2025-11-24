@@ -57,25 +57,29 @@ The IMIRS AI Reporting System is a production-ready generative AI web applicatio
   - Smart caching strategy (cache SQL generation, not results)
   - Delete reports with confirmation
 
+- ✅ **Admin Panel** (Milestone 6)
+  - User Management: View, approve, edit users with real-time statistics
+  - Usage Statistics: System-wide metrics, query activity charts, top users
+  - Database Schema: View and edit database structure
+  - SQL Templates: Create, test, verify templates with DynamoDB storage
+  - All data is real-time from DynamoDB (no mock data)
+
 ### Code Statistics
-- **120+ files** committed
-- **70,000+ lines** of TypeScript/React code
+- **122 files** of TypeScript/React code
+- **15,600+ lines** of code (excluding node_modules)
 - **TypeScript strict mode** enabled
 - **Property-based testing** with fast-check
 - **Zero build errors** with comprehensive type safety
 
-- ✅ **SQL Template Management** (Milestone 6 - Partial)
-  - DynamoDB storage for SQL templates
-  - Test SQL button with verification status tracking
-  - Create Report button to generate saved reports from templates
-  - Verified/Unverified badges with test metadata
-  - Full CRUD operations with real-time updates
-  - Migration tools from S3 to DynamoDB
+### Current Phase
+- 🔄 **Phase 2: Production Deployment** (Milestone 8 - In Progress)
+  - CloudWatch alarms configured
+  - Comprehensive README and troubleshooting guide
+  - Amplify hosting setup in progress
+  - CI/CD pipeline configuration
 
-### In Progress
-- 🔄 Admin panel - User management, Schema, Examples, Guidelines (Milestone 6)
-- 🔄 Property tests and comprehensive test coverage (Milestone 7)
-- 🔄 Production deployment and CI/CD (Milestone 8)
+### Not Yet Implemented
+- ⏳ Property tests and comprehensive test coverage (Milestone 7)
 
 ## 🏗️ Architecture
 
@@ -380,43 +384,200 @@ The system automatically injects SQL filters based on user permissions:
 
 ## 📦 Deployment
 
-### Deploy to AWS Amplify
+### Production Deployment to AWS Amplify
 
-1. **Connect repository to Amplify**
-   ```bash
-   # Using Amplify CLI
-   amplify init
-   amplify push
-   ```
+**App ID:** `d3tlvc2i7h5gsh`  
+**Default Domain:** `d3tlvc2i7h5gsh.amplifyapp.com`
 
-2. **Configure build settings** in Amplify Console:
-   ```yaml
-   version: 1
-   frontend:
-     phases:
-       preBuild:
-         commands:
-           - npm ci
-       build:
-         commands:
-           - npm run build
-     artifacts:
-       baseDirectory: .next
-       files:
-         - '**/*'
-     cache:
-       paths:
-         - node_modules/**/*
-   ```
+#### Step 1: Connect GitHub Repository
 
-3. **Set environment variables** in Amplify Console
-   - Add all variables from `.env.local`
-   - Ensure `amplify_outputs.json` is generated during build
+1. Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+2. Click on "imirs-ai-reporting" app
+3. Click "Host web app" or "Connect branch"
+4. Select GitHub as source and authorize AWS Amplify
+5. Select your repository and the `main` branch
+6. Amplify will auto-detect `amplify.yml` and Next.js configuration
 
-4. **Deploy**
-   ```bash
-   npm run amplify:deploy
-   ```
+#### Step 2: Configure Environment Variables
+
+In Amplify Console → App Settings → Environment variables, add:
+
+```env
+# AWS Configuration
+AWS_REGION=us-east-1
+NEXT_PUBLIC_AWS_REGION=us-east-1
+
+# Lambda Function
+SQLSERVER_QUERY_LAMBDA_ARN=arn:aws:lambda:us-east-1:097056675955:function:sqlserver_query_js
+
+# S3 Configuration
+S3_BUCKET_NAME=imirs-ai-reporting
+S3_BUCKET_REGION=us-east-1
+S3_SCHEMA_KEY=schema/database-schema.json
+S3_TEMPLATES_KEY=templates/sql-templates.json
+S3_EXAMPLES_KEY=examples/one-shot-examples.json
+S3_GUIDELINES_KEY=guidelines/formatting-guidelines.md
+
+# Bedrock Models
+AWS_BEDROCK_REGION=us-east-1
+BEDROCK_MODEL_HAIKU=anthropic.claude-3-haiku-20240307-v1:0
+BEDROCK_MODEL_SONNET=anthropic.claude-3-5-sonnet-20240620-v1:0
+
+# Email (SES)
+SES_FROM_EMAIL=chuck@axiomaticinfo.com
+SES_ADMIN_EMAIL=chuck@axiomaticinfo.com
+
+# Application URL (update after first deployment)
+NEXT_PUBLIC_APP_URL=https://main.d3tlvc2i7h5gsh.amplifyapp.com
+```
+
+**Important:** Do NOT add `AWS_PROFILE` in production - Amplify uses IAM roles.
+
+#### Step 3: Configure IAM Permissions
+
+Attach this policy to the Amplify service role:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["lambda:InvokeFunction"],
+      "Resource": "arn:aws:lambda:us-east-1:097056675955:function:sqlserver_query_js"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:ListBucket"],
+      "Resource": [
+        "arn:aws:s3:::imirs-ai-reporting",
+        "arn:aws:s3:::imirs-ai-reporting/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["bedrock:InvokeModel"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      "Resource": "arn:aws:dynamodb:us-east-1:*:table/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:us-east-1:*:log-group:/imirs-ai-reporting/*"
+    }
+  ]
+}
+```
+
+#### Step 4: Deploy Backend
+
+```bash
+# Deploy Amplify backend (Cognito, DynamoDB)
+npx ampx pipeline-deploy --branch main --app-id d3tlvc2i7h5gsh
+```
+
+This creates:
+- Cognito User Pool with custom attributes
+- DynamoDB tables (UserProfile, SavedReport, QueryHistory, SQLTemplate)
+- AppSync API
+- `amplify_outputs.json` configuration
+
+#### Step 5: Seed Admin User
+
+```bash
+# Create initial admin user
+npx tsx scripts/seed-admin-user.ts
+```
+
+#### Step 6: Upload Configuration to S3
+
+```bash
+aws s3 cp config-templates/database-schema.json s3://imirs-ai-reporting/schema/database-schema.json --profile tdmadmin
+aws s3 cp config-templates/sql-templates.json s3://imirs-ai-reporting/templates/sql-templates.json --profile tdmadmin
+aws s3 cp config-templates/one-shot-examples.json s3://imirs-ai-reporting/examples/one-shot-examples.json --profile tdmadmin
+aws s3 cp config-templates/formatting-guidelines.md s3://imirs-ai-reporting/guidelines/formatting-guidelines.md --profile tdmadmin
+```
+
+#### Step 7: Migrate Templates to DynamoDB
+
+```bash
+npx tsx scripts/migrate-templates-to-dynamodb.ts
+```
+
+#### Step 8: Configure CloudWatch Alarms
+
+```bash
+npm run setup:alarms
+```
+
+This creates alarms for:
+- Query execution time > 4 seconds
+- Bedrock API failures
+- Lambda invocation errors
+- High error rate (> 10%)
+
+Check your email to confirm SNS subscription.
+
+#### Step 9: Deploy Frontend
+
+Push to main branch to trigger automatic deployment:
+
+```bash
+git push origin main
+```
+
+Or deploy manually:
+
+```bash
+npm run amplify:deploy
+```
+
+#### Step 10: Verify Deployment
+
+1. Visit the deployed URL
+2. Test authentication (login/register)
+3. Test query execution
+4. Test saved reports
+5. Test admin panel (if admin user)
+
+### Build Configuration
+
+The `amplify.yml` file is configured for:
+- Node.js 20 via nvm
+- Legacy peer deps for compatibility
+- Linux-specific Parcel watcher
+- Environment variable injection
+- Next.js standalone build verification
+- Comprehensive caching
+
+### Continuous Deployment
+
+Amplify automatically deploys when you push to `main`:
+- Runs backend deployment
+- Installs dependencies
+- Builds Next.js application
+- Deploys to production
+- Invalidates CDN cache
 
 ## 🧪 Testing
 
@@ -433,6 +594,153 @@ npm run test:run
 # Test AWS access
 npm run test:aws
 ```
+
+## 🔧 Troubleshooting
+
+### Build Failures
+
+**Issue:** Build fails in Amplify Console  
+**Solution:**
+- Check build logs in Amplify Console
+- Verify all environment variables are set
+- Ensure Node.js version is 20+
+- Check for TypeScript errors: `npm run build` locally
+- Verify `amplify_outputs.json` is generated
+
+**Issue:** "Module not found" errors  
+**Solution:**
+- Clear cache: Delete `.next` folder and rebuild
+- Check `serverExternalPackages` in `next.config.ts`
+- Verify all dependencies are in `package.json`
+
+### Authentication Issues
+
+**Issue:** Users can't log in  
+**Solution:**
+- Verify Cognito User Pool exists
+- Check `amplify_outputs.json` is present
+- Verify redirect URLs in Cognito settings
+- Check user status is ACTIVE (not PENDING_APPROVAL)
+
+**Issue:** "User does not exist" error  
+**Solution:**
+- Verify user was created in Cognito
+- Check UserProfile exists in DynamoDB
+- Run seed script: `npx tsx scripts/seed-admin-user.ts`
+
+### Query Execution Errors
+
+**Issue:** Queries fail with Lambda errors  
+**Solution:**
+- Verify Lambda ARN is correct in environment variables
+- Check IAM permissions for Lambda invocation
+- Verify Lambda is in same region (us-east-1)
+- Check Lambda logs in CloudWatch for detailed errors
+- Test Lambda directly: `npm run test:aws`
+
+**Issue:** "Access denied" errors  
+**Solution:**
+- Verify user has proper SQL filter configured
+- Check Amplify service role has Lambda invoke permissions
+- Verify Lambda has database access
+
+### DynamoDB Access Issues
+
+**Issue:** Can't read/write DynamoDB  
+**Solution:**
+- Verify table names match `amplify_outputs.json`
+- Check IAM permissions for DynamoDB operations
+- Verify tables exist in correct region
+- Check table indexes are created
+
+**Issue:** "ResourceNotFoundException"  
+**Solution:**
+- Run `npm run amplify:sandbox` to create tables
+- Verify backend deployment completed successfully
+- Check table names in AWS Console
+
+### S3 Configuration Issues
+
+**Issue:** Can't load schema/templates  
+**Solution:**
+- Verify S3 bucket exists: `imirs-ai-reporting`
+- Check files are uploaded to correct paths
+- Verify IAM permissions for S3 read access
+- Test S3 access: `aws s3 ls s3://imirs-ai-reporting/ --profile tdmadmin`
+
+### Bedrock API Errors
+
+**Issue:** "Access denied" to Bedrock  
+**Solution:**
+- Verify Bedrock is enabled in your AWS account
+- Check IAM permissions for `bedrock:InvokeModel`
+- Verify model IDs are correct
+- Check region is us-east-1
+
+**Issue:** "Throttling" errors  
+**Solution:**
+- Implement exponential backoff (already in code)
+- Request quota increase from AWS
+- Use caching to reduce API calls
+
+### Performance Issues
+
+**Issue:** Slow query execution  
+**Solution:**
+- Check CloudWatch logs for execution times
+- Verify Lambda has adequate memory/timeout
+- Check database query performance
+- Review SQL query complexity
+
+**Issue:** High costs  
+**Solution:**
+- Enable caching (already implemented)
+- Use Haiku model by default (cheaper)
+- Monitor Bedrock usage in CloudWatch
+- Review query patterns for optimization
+
+### Email Notification Issues
+
+**Issue:** Emails not sending  
+**Solution:**
+- Verify SES is configured and email addresses are verified
+- Check IAM permissions for SES
+- Review SES sending limits
+- Check CloudWatch logs for SES errors
+
+### Local Development Issues
+
+**Issue:** Can't connect to AWS services locally  
+**Solution:**
+- Verify AWS CLI is configured: `aws configure`
+- Check AWS profile is set: `export AWS_PROFILE=tdmadmin`
+- Test credentials: `aws sts get-caller-identity`
+- Verify `.env.local` has correct values
+
+**Issue:** "amplify_outputs.json not found"  
+**Solution:**
+- Run `npm run amplify:sandbox` to generate it
+- Verify file exists in project root
+- Don't add to `.gitignore` (it's needed for builds)
+
+### Common Error Messages
+
+**"Invalid SQL: Must be a SELECT statement"**  
+- Only SELECT queries are allowed for security
+- Remove INSERT, UPDATE, DELETE, DROP statements
+
+**"Invalid SQL: Must include TOP clause"**  
+- Add `TOP (1000)` to limit results
+- Example: `SELECT TOP (1000) * FROM Table`
+
+**"Row-level security filter injection failed"**  
+- Check user's SQL filter is valid SQL syntax
+- Verify filter doesn't conflict with query structure
+
+**"Bedrock model escalation failed"**  
+- Check both Haiku and Sonnet models are accessible
+- Verify model IDs in environment variables
+- Review CloudWatch logs for detailed error
 
 ## 📝 Development Scripts
 
